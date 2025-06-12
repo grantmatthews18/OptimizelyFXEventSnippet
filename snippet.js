@@ -15,25 +15,25 @@ class Logger {
     // Log methods for each level
     debug(message) {
         if (this.shouldLog('debug')) {
-            console.debug(str(initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.debug((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
         }
     }
 
     info(message) {
         if (this.shouldLog('info')) {
-            console.info(str(initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.info((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
         }
     }
 
     warn(message) {
         if (this.shouldLog('warn')) {
-            console.warn(str(initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.warn((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
         }
     }
 
     error(message) {
         if (this.shouldLog('error')) {
-            console.error(str(initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.error((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
         }
     }
 
@@ -185,11 +185,13 @@ let datafile = null;
 
 // Check URL query parameters for 'optimizely_log' parameter
 const urlParams = new URLSearchParams(window.location.search);
-const optimizelyLogLevel = urlParams.get('optimizely_log');
+const optimizelyLogLevel = urlParams.get('optimizelyfx_log');
 if (optimizelyLogLevel && ['error', 'warn', 'info', 'debug', 'none'].includes(optimizelyLogLevel)) {
     logger.setLevel(optimizelyLogLevel);
     logger.info('Log level set to ' + optimizelyLogLevel.toUpperCase());
 }
+
+logger.info('Initializing OptimizelyFX Snippet...');
 
 async function init() {
     datafile = await fetchDataFile();
