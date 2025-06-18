@@ -243,7 +243,7 @@ async function trackEvent(event) {
         });
 
         att.push({
-            e: null,
+            e: "$opt_bot_filtering",
             k: "$opt_bot_filtering",
             t: "custom",
             v: datafile.botFiltering
