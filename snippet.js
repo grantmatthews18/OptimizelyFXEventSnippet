@@ -81,18 +81,15 @@ class EventQueue {
 
 // Process Push Event
 async function processPushEvent(event) {
-    if (!window.optimizelyFX || !window.optimizelyFX.initialized) {
-        if (event && event.type === 'init') {
-            await initialize(event);
+    if (event && event.type === 'init') {
+        if (window.optimizelyFX.initialized) {
+            logger.warn('OptimizelyFX Snippet already initialized. Skipping initialization.');
             return;
         }
-        else {
-            logger.error('OptimizelyFX Snippet not initialized. Please ensure the snippet is loaded before pushing events.');
-            return;
-        }
+        await initialize(event);
+        return;
     }
-
-    if (event && event.type === 'event') {
+    else if (event && event.type === 'event') {
         await trackEvent(event);
         return;
     }
