@@ -277,7 +277,7 @@ async function trackEvent(event) {
         };
 
         // Send the event to Optimizely's event endpoint
-        navigator.sendBeacon('https://logx.optimizely.com/v1/events', data);
+        navigator.sendBeacon('https://logx.optimizely.com/v1/events', JSON.stringify(data));
         logger.info('Event tracked: ' + event.eventName + ' for User ID: ' + window.optimizelyFX.currentUser.id);
     }
     return;
