@@ -13,25 +13,25 @@ class Logger {
     // Log methods for each level
     debug(message) {
         if (this.shouldLog('debug')) {
-            console.debug('[Optimizely] /' + message);
+            console.debug('[Optimizely] ' + message);
         }
     }
 
     info(message) {
         if (this.shouldLog('info')) {
-            console.info('[Optimizely] /' + message);
+            console.info('[Optimizely] ' + message);
         }
     }
 
     warn(message) {
         if (this.shouldLog('warn')) {
-            console.warn('[Optimizely] /' + message);
+            console.warn('[Optimizely] ' + message);
         }
     }
 
     error(message) {
         if (this.shouldLog('error')) {
-            console.error('[Optimizely] /' + message);
+            console.error('[Optimizely] ' + message);
         }
     }
 
@@ -242,7 +242,7 @@ async function trackEvent(event) {
             };
         });
 
-        var body = {
+        var data = {
             "account_id": datafile.accountId,
             "anonymize_ip": true,
             "client_name": "OptimizelyFX Event Snippet",
