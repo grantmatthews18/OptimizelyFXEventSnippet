@@ -315,10 +315,10 @@ async function setUser(event) {
 }
 
 // Loading the OptimizelyFX Snippet
+const logger = new Logger('none'); // Set the default log level to 'none'
 logger.info('Loading OptimizelyFX Snippet...');
 
 let datafile = null;
-const logger = new Logger('none'); // Set the default log level to 'none'
 const eventQueue = new EventQueue();
 
 // Check URL query parameters for 'optimizely_log' parameter
