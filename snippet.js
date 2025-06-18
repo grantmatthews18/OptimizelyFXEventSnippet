@@ -257,7 +257,7 @@ async function trackEvent(event) {
             "client_version": "1.0.0",
             "enrich_decisions": true,
             "project_id": datafile.projectId,
-            "revision": "1",
+            "revision": datafile.revision,
             "visitors": [
                 {
                     "visitor_id": window.optimizelyFX.currentUser.id,
