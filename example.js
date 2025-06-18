@@ -23,3 +23,8 @@ window.optimizelyFX.push({
         'value': 50
     }
 })
+
+window.optimizelyFX.push({
+    'type': 'log',
+    'level': 'error'
+})
