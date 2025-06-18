@@ -242,6 +242,14 @@ async function trackEvent(event) {
             };
         });
 
+        att.push({
+            e: null,
+            k: "$opt_bot_filtering",
+            t: "custom",
+            v: datafile.botFiltering
+
+        });
+
         var data = {
             "account_id": datafile.accountId,
             "anonymize_ip": true,
