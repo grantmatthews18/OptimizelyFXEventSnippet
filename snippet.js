@@ -1,6 +1,4 @@
-// Helper Functions
-
-// Logger Function
+// Logger Class
 class Logger {
     constructor(level = 'none') {
         this.levels = ['debug', 'info', 'warn', 'error', 'none'];
@@ -15,25 +13,25 @@ class Logger {
     // Log methods for each level
     debug(message) {
         if (this.shouldLog('debug')) {
-            console.debug((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.debug('[Optimizely] /' + message);
         }
     }
 
     info(message) {
         if (this.shouldLog('info')) {
-            console.info((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.info('[Optimizely] /' + message);
         }
     }
 
     warn(message) {
         if (this.shouldLog('warn')) {
-            console.warn((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.warn('[Optimizely] /' + message);
         }
     }
 
     error(message) {
         if (this.shouldLog('error')) {
-            console.error((initTime.getTime() - Date.now()) + ' | [Optimizely] /' + message);
+            console.error('[Optimizely] /' + message);
         }
     }
 
@@ -41,19 +39,109 @@ class Logger {
     setLevel(level) {
         if (this.levels.includes(level)) {
             this.currentLevel = level;
-        } else {
+        }
+        else {
             console.warn(`Invalid log level: ${level}`);
         }
     }
 }
 
+// Event Queue Class
+class EventQueue {
+    constructor() {
+        this.queue = [];
+        this.processing = false;
+    }
+
+    // Add an event to the queue
+    enqueue(event) {
+        this.queue.push(event);
+        this.processNext();
+    }
+
+    // Process the next event in the queue
+    async processNext() {
+        if (this.processing || this.queue.length === 0) {
+            return;
+        }
+
+        this.processing = true;
+        const event = this.queue.shift();
+
+        try {
+            await processPushEvent(event); // Ensure processPushEvent handles async operations
+        } catch (error) {
+            logger.error('Error processing event: ' + JSON.stringify(event) + ' | ' + error.message);
+        } finally {
+            this.processing = false;
+            this.processNext(); // Process the next event in the queue
+        }
+    }
+}
+
+// Process Push Event
+async function processPushEvent(event) {
+    if (!window.optimizelyFX || !window.optimizelyFX.initialized) {
+        if (event && event.type === 'init') {
+            await initialize(event);
+            return;
+        }
+        else {
+            logger.error('OptimizelyFX Snippet not initialized. Please ensure the snippet is loaded before pushing events.');
+            return;
+        }
+    }
+
+    if (event && event.type === 'event') {
+        await trackEvent(event);
+        return;
+    }
+    else if (event && event.type === 'user') {
+        await setUser(event);
+        return;
+    }
+    else if (event && event.type === 'log') {
+        if (event.level && logger[event.level]) {
+            logger.setLevel(event.level);
+            logger.info('Log level set to ' + event.level.toUpperCase());
+            return;
+        } else {
+            logger.error('Invalid log level or message: ' + JSON.stringify(event));
+            return;
+        }
+    }
+    else if (typeof event === 'object' && event !== null && event.type) {
+        logger.warn('Invalid Push Argument: ' + event.type);
+        return;
+    }
+    else if (typeof event === 'object' && event !== null && event.type) {
+        logger.error('No Event Type Found: ' + JSON.stringify(event));
+        return;
+    }
+    else {
+        logger.error('Push not of type Object: ' + JSON.stringify(event));
+        return;
+    }
+}
+
 // Process Optimizely DataFile
-// Currently have to make second request to get the datafile
-// Ideally this would be prepopulated from Optimizely's CDN
-// IDEALLY this would be prepopulated from Optimizely's CDN and only include needed info from the project
-async function fetchDataFile() {
+async function fetchDataFile(sdkKey = null, url = null) {
     // Fetch the datafile from Optimizely's CDN
-    const response = await fetch('https://cdn.optimizely.com/datafiles/P4LP7jhFhkrY3zJ3WzT3j.json');
+
+    if (sdkKey) {
+        logger.info('Fetching datafile for SDK Key: ' + sdkKey);
+        url = `https://cdn.optimizely.com/datafiles/${sdkKey}.json`;
+    }
+    else if (url) {
+        logger.info('Fetching datafile from provided URL: ' + url);
+        url = url;
+    }
+    else {
+        logger.error('No SDK Key or URL provided for fetching datafile.');
+        return;
+    }
+
+    const response = await fetch(url);
     if (response.status !== 200) {
         logger.error('Failed to fetch the datafile. Status: ' + response.status);
         return;
@@ -63,28 +151,75 @@ async function fetchDataFile() {
     return response.json();
 }
 
-// Process Push Event
-function processPushEvent(event) {
-    if (event && event.type === 'event') {
-        trackEvent(event);
+// Initialize OptimizelyFX Snippet
+async function initialize(event) {
+
+    // Check if the snippet is already initialized
+    if (window.optimizelyFX.initialized) {
+        logger.warn('OptimizelyFX Snippet already initialized. Skipping initialization.');
+        return;
     }
-    else if (event && event.type === 'user') {
-        setUser(event);
+
+    // Check if the user ID is provided
+    if (!event.userId) {
+        logger.error('No User ID provided for initialization. Please set a User ID.');
+        return;
     }
-    else if (typeof event === 'object' && event !== null && event.type) {
-        logger.warn('Invalid Push Argument: ' + event.type);
+    if (typeof event.attributes !== 'object') {
+        logger.warn('User Attributes should be an Object. Skipping attributes.');
+        event.attributes = {};
     }
-    else if (typeof event === 'object' && event !== null && event.type) {
-        logger.error('No Event Type Found: ' + JSON.stringify(event));
+
+    // Get the datafile based on SDK Key or URL
+    if(event.sdkKey) {
+        logger.info('Initializing OptimizelyFX Snippet with SDK Key: ' + event.sdkKey);
+        datafile = await fetchDataFile(sdkKey=event.sdkKey);
+    }
+    else if (event.url) {
+        logger.info('Initializing OptimizelyFX Snippet with URL: ' + event.url);
+        datafile = await fetchDataFile(url=event.url);
     }
     else {
-        logger.error('Push not of type Object: ' + JSON.stringify(event));
+        logger.error('No SDK Key or URL provided for initialization.');
+        return;
     }
-    return;
+
+    // If datafile fetch fails, log an error and return
+    if (!datafile) {
+        logger.error('Datafile could not be fetched. Please check the SDK Key or URL.');
+        return;
+    }
+
+    // Set the current user
+    window.optimizelyFX.currentUser = {
+        id: event.userId,
+        attributes: []
+    };
+    logger.info('Current User ID set to: ' + window.optimizelyFX.currentUser.id);
+
+    // Check each attribute in the datafile
+    if (event.attributes && typeof event.attributes === 'object') {
+        for (const [key, value] of Object.entries(event.attributes)) {
+            const attributeObject = datafile.attributes.find(attr => attr.key === key);
+            if (!attributeObject) {
+                logger.warn(`Attribute key not found in datafile: ${key}`);
+                continue;
+            }
+            window.optimizelyFX.currentUser.attributes.push({
+                id: attributeObject.id,
+                name: key,
+                value: value
+            })
+            window.optimizelyFX.currentUser.attributes[key] = value;
+            logger.info(`User attribute set: ${key} = ${value}`);
+        }
+    }
+
+    window.optimizelyFX.initialized = true;
 }
 
 // Track Event
-function trackEvent(event) {
+async function trackEvent(event) {
 
     if (window.optimizelyFX.currentUser.id === null) {
         logger.error('No User ID set. Please set a User ID before tracking events.');
@@ -148,7 +283,8 @@ function trackEvent(event) {
     return;
 }
 
-function setUser(event) {
+// Set User Attributes
+async function setUser(event) {
     if (event.userId) {
         if (event.userId !== window.optimizelyFX.currentUser.id) {
             window.optimizelyFX.currentUser.id = event.userId;
@@ -178,10 +314,12 @@ function setUser(event) {
     }
 }
 
-// Initialization
-const initTime = new Date();
-const logger = new Logger('none'); // Set the default log level to 'info'
+// Loading the OptimizelyFX Snippet
+logger.info('Loading OptimizelyFX Snippet...');
+
 let datafile = null;
+const logger = new Logger('none'); // Set the default log level to 'none'
+const eventQueue = new EventQueue();
 
 // Check URL query parameters for 'optimizely_log' parameter
 const urlParams = new URLSearchParams(window.location.search);
@@ -191,30 +329,19 @@ if (optimizelyLogLevel && ['error', 'warn', 'info', 'debug', 'none'].includes(op
     logger.info('Log level set to ' + optimizelyLogLevel.toUpperCase());
 }
 
-logger.info('Initializing OptimizelyFX Snippet...');
-
-async function init() {
-    datafile = await fetchDataFile();
-
-    // Checking if any data was pushed before script initialization
-    if (Array.isArray(window.optimizelyFX)) {
-        window.optimizelyFX.forEach(function (event) {
-            processPushEvent(event);
-        });
-    }
-
-    // Initialize the OptimizelyFX global object
-    window.optimizelyFX = {
-        push: function (event) {
-            processPushEvent(event);
-        },
-        currentUser: {
-            id: null,
-            attributes: []
-        }
-    }
-
-    logger.info('OptimizelyFX initialized successfully.');
+// Checking if any data was pushed before script initialization
+if (Array.isArray(window.optimizelyFX)) {
+    window.optimizelyFX.forEach(function (event) {
+        eventQueue.enqueue(event);
+    });
 }
 
-init();
+window.optimizelyFX = {
+    push: function (event) {
+        eventQueue.enqueue(event);
+    },
+    currentUser: null,
+    initialized: false
+}
+
+logger.info('OptimizelyFX Snippet Loaded.');
