@@ -77,3 +77,27 @@ window.optimizelyFX.push({
     'level': 'error'
 })
 ```
+
+## Additional Features (Planned or Not Persuing)
+
+### [Not Persuing] Project Initialization via `<script>` URL Query Parameters or Other
+
+#### Current Approach
+
+The current approach for initializing the snippet requires pushing an init command to the snippet with either the project datafile or SDK key and the current user.
+
+#### Idea
+
+Use a:
+
+* query parameter in the src URL used by the `<script>` tag (ex. `<script src='https://cdn.example.com/js/snippet.js?sdkKey=abc123'>`
+* data-* attribute in the `<script>` tag (ex. `<script src='https://cdn.example.com/js/snippet.js' data-sdkKey='abc123'>`)
+
+to fetch the Optimizely project configuration as the script is initially parsed so its ready immediately and doesn't need to be configured via a seperate init command.
+
+#### Result
+
+There is no way to parse a query parameter or data-* attribute from a `<script>` tag reliably under the following conditions:
+
+* The `<script>` tag is using the `async` or `defer` attribute (goal of the snippet is asynchronous execution).
+* There are multiple versions of the same `<script>` implemented on the page (not intended but may occur unintentionally).
