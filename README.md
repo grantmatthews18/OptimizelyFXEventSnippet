@@ -78,7 +78,7 @@ window.optimizelyFX.push({
 })
 ```
 
-## Additional Features (Planned or Not Persuing)
+## Additional Features (Planned, Completed or Not Persuing)
 
 ### [Not Persuing] Project Initialization via `<script>` URL Query Parameters or Other
 
@@ -101,3 +101,17 @@ There is no way to parse a query parameter or data-* attribute from a `<script>`
 
 * The `<script>` tag is using the `async` or `defer` attribute (goal of the snippet is asynchronous execution).
 * There are multiple versions of the same `<script>` implemented on the page (not intended but may occur unintentionally).
+
+### [Completed] Datafile Polling
+
+#### Previous Approach
+
+The snippet fetches a project datafile on initialization and doesn't fetch the datafile again.
+
+#### Idea
+
+In some cases, it may be useful to poll for datafile updates after the snippet has been initialized. For example, Single Page Application (SPA) style sites can be loaded for long periods of time in a browser without a full page load. Datafile updates could occur duirng that time so it could be important to poll for updates periodically.
+
+#### **Result**
+
+Datafile polling implemented with a current minimum vallue of 1000 (1s). This is likely too low for an event only snippet and will be likely updated accordingly in the future.
