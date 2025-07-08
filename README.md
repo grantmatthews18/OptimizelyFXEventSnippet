@@ -65,7 +65,7 @@ window.optimizelyFX.push({
 })
 ```
 
-*Note, Event Properties are currently only supported when passed via the reserved attribute* `$opt_event_properties`*. Support for the 'properties' key is could be developed.*
+~~*Note, Event Properties are currently only supported when passed via the reserved attribute* `$opt_event_properties`*. Support for the 'properties' key is could be developed.*~~
 
 #### Robust Logging
 
