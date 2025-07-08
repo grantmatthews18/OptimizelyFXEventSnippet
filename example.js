@@ -8,6 +8,17 @@ window.optimizelyFX.push({
 })
 
 window.optimizelyFX.push({
+    'type': 'init',
+    'sdkKey': '2a6qXYH7XRi9DQezV4amE',
+    'pollingInterval': 1000,
+    'userId': '12345',
+    'attributes': {
+        'testAttribute': 30
+    },
+})
+
+
+window.optimizelyFX.push({
     'type': 'user',
     'userId': '12345',
     'attributes': {
