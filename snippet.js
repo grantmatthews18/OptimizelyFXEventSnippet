@@ -187,6 +187,40 @@ async function initialize(event) {
         return;
     }
 
+    // Setup Datafile polling (if specified)
+    if (event.pollingInterval && (typeof event.pollingInterval === 'number' && !isNaN(event.pollingInterval))) {
+
+        pollingInterval = event.pollingInterval;
+        if(pollingInterval < 1000) {
+            logger.warn('Polling interval is less than 1000ms. Setting to 1000ms.');
+            pollingInterval = 1000;
+        }
+        logger.info('Setting up polling with interval: ' + pollingInterval + 'ms');
+
+        setInterval(async () => {
+            try {
+                const newDatafile = await fetchDataFile(event.sdkKey, event.url);
+                if (newDatafile && newDatafile.revision !== datafile.revision) {
+                    logger.info('New datafile revision detected. Updating datafile.');
+                    datafile = newDatafile;
+                    logger.info('Datafile updated successfully to revision: ' + datafile.revision);
+                } else {
+                    logger.debug('No new datafile revision found. Current revision: ' + datafile.revision);
+                }
+            } catch (error) {
+                logger.error('Error fetching datafile during polling: ' + error.message);
+            }
+        }, pollingInterval);
+
+        logger.info('Polling setup complete with interval: ' + pollingInterval + 'ms');
+    }
+    else if (event.pollingInterval) {
+        logger.error('Invalid polling interval provided. It must be a number.');
+    }
+    else {
+        logger.info('No polling interval provided. Skipping polling setup.');
+    }
+
     // Set the current user
     window.optimizelyFX.currentUser = {
         id: event.userId,
@@ -324,6 +358,7 @@ const logger = new Logger('none'); // Set the default log level to 'none'
 logger.info('Loading OptimizelyFX Snippet...');
 
 let datafile = null;
+let pollingInterval = null;
 const eventQueue = new EventQueue();
 
 // Check URL query parameters for 'optimizely_log' parameter
