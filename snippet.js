@@ -126,11 +126,11 @@ async function fetchDataFile(sdkKey = null, url = null) {
     // Fetch the datafile from Optimizely's CDN
 
     if (sdkKey) {
-        logger.info('Fetching datafile for SDK Key: ' + sdkKey);
+        logger.debug('Fetching datafile for SDK Key: ' + sdkKey);
         url = `https://cdn.optimizely.com/datafiles/${sdkKey}.json`;
     }
     else if (url) {
-        logger.info('Fetching datafile from provided URL: ' + url);
+        logger.debug('Fetching datafile from provided URL: ' + url);
         url = url;
     }
     else {
@@ -144,7 +144,7 @@ async function fetchDataFile(sdkKey = null, url = null) {
         return;
     }
 
-    logger.info('Datafile fetched successfully.');
+    logger.debug('Datafile fetched successfully.');
     return response.json();
 }
 
@@ -171,10 +171,12 @@ async function initialize(event) {
     if(event.sdkKey) {
         logger.info('Initializing OptimizelyFX Snippet with SDK Key: ' + event.sdkKey);
         datafile = await fetchDataFile(sdkKey=event.sdkKey);
+        logger.info('Datafile fetched for SDK Key: ' + event.sdkKey);
     }
     else if (event.url) {
         logger.info('Initializing OptimizelyFX Snippet with URL: ' + event.url);
         datafile = await fetchDataFile(url=event.url);
+        logger.info('Datafile fetched from URL: ' + event.url);
     }
     else {
         logger.error('No SDK Key or URL provided for initialization.');
